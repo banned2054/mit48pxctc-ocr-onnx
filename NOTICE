@@ -1,0 +1,37 @@
+MIT 48px CTC OCR ONNX Notice
+============================
+
+This project contains code and exported model artifacts derived from the
+48px CTC OCR model used by manga-image-translator.
+
+Upstream project:
+  manga-image-translator
+  https://github.com/zyddnys/manga-image-translator
+
+Upstream release asset:
+  https://github.com/zyddnys/manga-image-translator/releases/download/beta-0.3/ocr-ctc.zip
+
+Upstream copyright and authorship remain with the original authors and
+contributors of manga-image-translator and the model authors. This repository's
+conversion scripts, packaging metadata, and ONNX runtime helpers are distributed
+under GPL-3.0-only.
+
+The ONNX model, when distributed, is a converted form of the upstream PyTorch
+checkpoint `ocr-ctc.ckpt`. Keep this notice, the GPL-3.0 license text, and a
+clear reference to the upstream source with every redistribution.
+
+Additional authorization:
+  The upstream author confirmed in writing that:
+
+  - the 48px CTC OCR model was trained and released by manga-image-translator;
+  - the model weights are licensed under GPLv3;
+  - preserving the original license is sufficient to permit conversion of the
+    model weights to ONNX format and redistribution of the converted artifact.
+
+  Keep this authorization record with release materials when publishing the ONNX
+  artifact.
+
+No warranty:
+  This project and any converted model artifacts are provided without warranty,
+  under the terms of GPL-3.0-only and any additional written authorization terms
+  supplied by the upstream rights holder.

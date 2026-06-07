@@ -1,0 +1,23 @@
+{
+  "model_name": "mit48pxctc_ocr",
+  "format": "onnx",
+  "opset": 17,
+  "source": {
+    "project": "zyddnys/manga-image-translator",
+    "release": "beta-0.3",
+    "archive_url": "https://github.com/zyddnys/manga-image-translator/releases/download/beta-0.3/ocr-ctc.zip",
+    "checkpoint": "ocr-ctc.ckpt",
+    "alphabet": "alphabet-all-v5.txt",
+    "archive_sha256": "TODO",
+    "checkpoint_sha256": "TODO",
+    "alphabet_sha256": "TODO"
+  },
+  "export": {
+    "command": "uv run python scripts/export.py --checkpoint ocr-ctc.ckpt --alphabet alphabet-all-v5.txt --output dist/mit48pxctc_ocr.onnx",
+    "dynamic_axes": ["batch", "width", "time"]
+  },
+  "validation": {
+    "widths": [512, 1024, 1536],
+    "max_abs_diff": "TODO"
+  }
+}

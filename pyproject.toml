@@ -1,0 +1,26 @@
+[project]
+name = "mit48pxctc-ocr-onnx"
+version = "0.1.0"
+description = "ONNX export and runtime helpers for the MIT 48px CTC OCR model."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "GPL-3.0-only"
+dependencies = [
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+export = [
+    "torch>=2.1",
+    "onnx>=1.15",
+    "onnxruntime>=1.17",
+]
+runtime = [
+    "onnxruntime>=1.17",
+]
+
+[tool.uv]
+package = true
+
+[tool.setuptools.packages.find]
+include = ["mit48pxctc_ocr_onnx*"]
