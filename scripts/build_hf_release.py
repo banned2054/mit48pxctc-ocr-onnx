@@ -15,6 +15,16 @@ SOURCE_RELEASE_URL = "https://github.com/zyddnys/manga-image-translator/releases
 SOURCE_ARCHIVE_URL = (
     "https://github.com/zyddnys/manga-image-translator/releases/download/beta-0.3/ocr-ctc.zip"
 )
+GITHUB_REPO_URL = "https://github.com/banned2054/mit48pxctc-ocr-onnx"
+HF_REPO_URL = "https://huggingface.co/banned404/mit48pxctc-ocr-onnx"
+
+
+BADGES = textwrap.dedent(
+    f"""\
+    [![Hugging Face](https://img.shields.io/badge/Hugging%20Face-banned404%2Fmit48pxctc--ocr--onnx-yellow?logo=huggingface)]({HF_REPO_URL})
+    [![GitHub](https://img.shields.io/badge/GitHub-banned2054%2Fmit48pxctc--ocr--onnx-black?logo=github)]({GITHUB_REPO_URL})
+    """
+).strip()
 
 
 def sha256(path: Path) -> str:
@@ -45,6 +55,8 @@ def build_readme(validation: dict[str, Any]) -> str:
             )
         )
     validation_text = "\n".join(lines)
+    badges = BADGES.replace("\n", "\n        ")
+    validation_text = validation_text.replace("\n", "\n        ")
 
     return textwrap.dedent(
         f"""\
@@ -61,6 +73,10 @@ def build_readme(validation: dict[str, Any]) -> str:
         ---
 
         # MIT 48px CTC OCR ONNX
+
+        {badges}
+
+        [简体中文](README.zh-CN.md)
 
         This repository provides an ONNX conversion of the 48px CTC OCR model used by
         [manga-image-translator](https://github.com/zyddnys/manga-image-translator).
@@ -138,6 +154,99 @@ def build_readme(validation: dict[str, Any]) -> str:
     )
 
 
+def build_readme_zh(validation: dict[str, Any]) -> str:
+    lines = []
+    for result in validation["results"]:
+        lines.append(
+            "width={width}: logits diff={logits:.6g}; colors diff={colors:.6g}".format(
+                width=result["width"],
+                logits=result["char_logits_max_abs_diff"],
+                colors=result["color_values_max_abs_diff"],
+            )
+        )
+    validation_text = "\n".join(lines)
+    badges = BADGES.replace("\n", "\n        ")
+    validation_text = validation_text.replace("\n", "\n        ")
+
+    return textwrap.dedent(
+        f"""\
+        # MIT 48px CTC OCR ONNX
+
+        {badges}
+
+        [English](README.md)
+
+        本仓库提供 manga-image-translator 使用的 48px CTC OCR 模型的 ONNX 转换版本。
+
+        ONNX 产物派生自上游 `{SOURCE_RELEASE}` release asset `ocr-ctc.zip` 中的
+        PyTorch checkpoint `ocr-ctc.ckpt`。
+
+        ## 文件
+
+        ```text
+        mit48pxctc_ocr.onnx
+        alphabet-all-v5.txt
+        metadata.json
+        LICENSE
+        NOTICE
+        ```
+
+        ## 上游来源
+
+        - 上游项目：<https://github.com/zyddnys/manga-image-translator>
+        - 上游发布：<{SOURCE_RELEASE_URL}>
+        - 源压缩包：`ocr-ctc.zip`
+        - 源 checkpoint：`ocr-ctc.ckpt`
+        - 源字典：`alphabet-all-v5.txt`
+
+        ## 模型接口
+
+        输入：
+
+        - name: `image`
+        - dtype: `float32`
+        - shape: `[batch, 3, 48, width]`
+        - color order: BGR
+        - normalization: `(uint8_pixel - 127.5) / 127.5`
+
+        输出：
+
+        - `char_logits`: `[batch, time, vocab_size]`
+        - `color_values`: `[batch, time, 6]`
+
+        `char_logits` 未经过 softmax。`color_values` 未经过 clamp。字典第一项是
+        CTC blank token。特殊 token `<SP>` 表示普通空格。
+
+        ## 验证
+
+        ONNX 导出已通过 `onnx.checker`，并使用 ONNX Runtime CPU execution 与
+        PyTorch checkpoint 输出进行对比。
+
+        ```text
+        {validation_text}
+        ```
+
+        ## 导出
+
+        导出命令：
+
+        ```bash
+        uv run --extra export python scripts/export.py \\
+          --checkpoint origin_model/ocr-ctc.ckpt \\
+          --alphabet origin_model/alphabet-all-v5.txt \\
+          --output dist/mit48pxctc_ocr.onnx
+        ```
+
+        ## 许可
+
+        本 ONNX 转换产物及配套文件按 GPL-3.0-only 分发。详见 `LICENSE`。
+
+        上游项目使用 GPL-3.0 许可。上游作者和贡献者保留 manga-image-translator
+        以及模型的原始作者身份和版权。来源署名和再分发授权说明见 `NOTICE`。
+        """
+    )
+
+
 def build_metadata(
     archive_path: Path,
     checkpoint_path: Path,
@@ -198,6 +307,7 @@ def build_release(
     shutil.copy2(Path("LICENSE"), output_dir / "LICENSE")
     shutil.copy2(Path("NOTICE"), output_dir / "NOTICE")
     (output_dir / "README.md").write_text(build_readme(validation), encoding="utf-8")
+    (output_dir / "README.zh-CN.md").write_text(build_readme_zh(validation), encoding="utf-8")
     metadata = build_metadata(archive_path, checkpoint_path, alphabet_path, onnx_path, validation)
     (output_dir / "metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
 

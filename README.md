@@ -1,5 +1,11 @@
 # MIT 48px CTC OCR ONNX
 
+[![Hugging Face](https://img.shields.io/badge/Hugging%20Face-banned404%2Fmit48pxctc--ocr--onnx-yellow?logo=huggingface)](https://huggingface.co/banned404/mit48pxctc-ocr-onnx)
+[![GitHub](https://img.shields.io/badge/GitHub-banned2054%2Fmit48pxctc--ocr--onnx-black?logo=github)](https://github.com/banned2054/mit48pxctc-ocr-onnx)
+[![Publish ONNX to Hugging Face](https://github.com/banned2054/mit48pxctc-ocr-onnx/actions/workflows/publish-hf.yml/badge.svg)](https://github.com/banned2054/mit48pxctc-ocr-onnx/actions/workflows/publish-hf.yml)
+
+[简体中文](README.zh-CN.md)
+
 This repository keeps the ONNX export workflow, validation scripts, and model
 contract for the 48px CTC OCR model used by manga-image-translator.
 
