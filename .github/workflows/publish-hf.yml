@@ -7,23 +7,13 @@ on:
                 description: Hugging Face model repository ID
                 required: true
                 default: banned404/mit48pxctc-ocr-onnx
-    push:
-        branches:
-            - main
-        paths:
-            - .github/workflows/publish-hf.yml
-            - LICENSE
-            - NOTICE
-            - README.md
-            - README.zh-CN.md
-            - metadata.example.json
-            - pyproject.toml
-            - uv.lock
-            - mit48pxctc_ocr_onnx/**
-            - scripts/**
 
 env:
     FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+concurrency:
+    group: publish-hf
+    cancel-in-progress: false
 
 jobs:
     publish:
