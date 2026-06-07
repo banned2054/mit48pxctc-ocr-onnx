@@ -1,0 +1,100 @@
+name: Publish ONNX to Hugging Face
+
+on:
+  workflow_dispatch:
+    inputs:
+      hf_repo_id:
+        description: Hugging Face model repository ID
+        required: true
+        default: banned404/mit48pxctc-ocr-onnx
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/publish-hf.yml
+      - LICENSE
+      - NOTICE
+      - README.md
+      - metadata.example.json
+      - pyproject.toml
+      - uv.lock
+      - mit48pxctc_ocr_onnx/**
+      - scripts/**
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      SOURCE_ARCHIVE_URL: https://github.com/zyddnys/manga-image-translator/releases/download/beta-0.3/ocr-ctc.zip
+      HF_REPO_ID: ${{ github.event_name == 'workflow_dispatch' && inputs.hf_repo_id || 'banned404/mit48pxctc-ocr-onnx' }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install export dependencies
+        run: uv sync --extra export
+
+      - name: Download upstream model archive
+        run: |
+          mkdir -p origin_model dist
+          curl -L "$SOURCE_ARCHIVE_URL" -o origin_model/ocr-ctc.zip
+          python -m zipfile -e origin_model/ocr-ctc.zip origin_model
+          checkpoint_path="$(find origin_model -name ocr-ctc.ckpt -print -quit)"
+          alphabet_path="$(find origin_model -name alphabet-all-v5.txt -print -quit)"
+          test -n "$checkpoint_path"
+          test -n "$alphabet_path"
+          if [ "$checkpoint_path" != "origin_model/ocr-ctc.ckpt" ]; then
+            cp "$checkpoint_path" origin_model/ocr-ctc.ckpt
+          fi
+          if [ "$alphabet_path" != "origin_model/alphabet-all-v5.txt" ]; then
+            cp "$alphabet_path" origin_model/alphabet-all-v5.txt
+          fi
+
+      - name: Export ONNX
+        run: |
+          uv run python scripts/export.py \
+            --checkpoint origin_model/ocr-ctc.ckpt \
+            --alphabet origin_model/alphabet-all-v5.txt \
+            --output dist/mit48pxctc_ocr.onnx
+
+      - name: Validate ONNX
+        run: |
+          uv run python scripts/validate.py \
+            --checkpoint origin_model/ocr-ctc.ckpt \
+            --alphabet origin_model/alphabet-all-v5.txt \
+            --onnx dist/mit48pxctc_ocr.onnx \
+            --widths 512 1024 1536 \
+            --json-output dist/validation.json
+
+      - name: Build Hugging Face release folder
+        run: |
+          uv run python scripts/build_hf_release.py \
+            --source-archive origin_model/ocr-ctc.zip \
+            --checkpoint origin_model/ocr-ctc.ckpt \
+            --alphabet origin_model/alphabet-all-v5.txt \
+            --onnx dist/mit48pxctc_ocr.onnx \
+            --validation-metadata dist/validation.json \
+            --output-dir hf-release
+
+      - name: Upload to Hugging Face
+        run: |
+          if [ -z "$HF_TOKEN" ]; then
+            echo "::error::Missing HF_TOKEN repository secret"
+            exit 1
+          fi
+          uvx --from huggingface_hub hf upload "$HF_REPO_ID" hf-release . \
+            --repo-type model \
+            --no-private \
+            --token "$HF_TOKEN"

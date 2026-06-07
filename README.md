@@ -74,6 +74,31 @@ uv run python scripts/validate.py `
 The validation script runs `onnx.checker`, prints the ONNX input/output schema,
 and compares ONNX Runtime output tensors against PyTorch output tensors.
 
+## Publish with GitHub Actions
+
+The workflow `.github/workflows/publish-hf.yml` can reproduce the public ONNX
+release from source:
+
+1. download the upstream `ocr-ctc.zip` release asset;
+2. extract `ocr-ctc.ckpt` and `alphabet-all-v5.txt`;
+3. export `dist/mit48pxctc_ocr.onnx`;
+4. validate ONNX Runtime outputs against PyTorch outputs;
+5. generate the Hugging Face release folder;
+6. upload the folder to Hugging Face.
+
+Create a GitHub repository secret named `HF_TOKEN` with a Hugging Face token
+that has write access to the target model repository.
+
+By default the workflow uploads to:
+
+```text
+banned404/mit48pxctc-ocr-onnx
+```
+
+The workflow runs on relevant pushes to `main` and can also be started manually
+from the GitHub Actions tab. Manual runs allow overriding the Hugging Face repo
+ID.
+
 ## Input Contract
 
 The ONNX model accepts one input:
